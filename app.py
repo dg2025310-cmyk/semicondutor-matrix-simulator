@@ -1,307 +1,739 @@
+
 import streamlit as st
 import numpy as np
 
-# =====================================
-# 1. 기본 화면 설정
-# =====================================
+# ==========================================
+# 1. 페이지 기본 설정
+# ==========================================
 
 st.set_page_config(
-    page_title="CMOS 반도체 센서 시뮬레이터",
+    page_title="CMOS Signal Lab",
     page_icon="🔬",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-st.title("🔬 반도체 CMOS 이미지 센서 시뮬레이터")
+# ==========================================
+# 2. 네이비 테마 디자인
+# ==========================================
 
-st.write(
-    "행렬연산을 이용하여 이미지 센서의 "
-    "디지털 신호 처리 과정을 체험해 봅시다."
-)
+st.markdown("""
+<style>
+.stApp {
+    background-color: #101A2E;
+    color: #EAF2FF;
+}
 
-st.info(
-    "이 프로그램은 실제 CMOS 이미지 센서의 "
-    "작동 원리를 단순화한 교육용 시뮬레이션입니다."
-)
+header[data-testid="stHeader"] {
+    background-color: #101A2E;
+}
 
-# =====================================
-# 2. 반도체 기본 원리
-# =====================================
+section[data-testid="stSidebar"] {
+    background-color: #16243D;
+}
 
-st.header("1. 반도체 이미지 센서란?")
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+    max-width: 1450px;
+}
 
-with st.expander("CMOS 이미지 센서의 작동 원리 알아보기"):
-    st.markdown("""
-    **① 빛 감지**
+h1, h2, h3 {
+    color: #F0F6FF !important;
+}
 
-    이미지 센서의 픽셀에 빛이 들어오면
-    포토다이오드가 빛을 감지합니다.
+p, label, li {
+    color: #C4D2E5;
+}
 
-    **② 전기 신호 생성**
+div[data-testid="stMetric"] {
+    background-color: #1B2B46;
+    border: 1px solid #304969;
+    padding: 15px;
+    border-radius: 12px;
+}
 
-    빛의 세기에 따라 전기 신호가 만들어집니다.
+div[data-testid="stMetricLabel"] {
+    color: #9DB7D8;
+}
 
-    **③ 디지털 변환**
+div[data-testid="stMetricValue"] {
+    color: #66D9EF;
+}
 
-    ADC(아날로그-디지털 변환기)를 통해
-    전기 신호가 디지털 데이터로 변환됩니다.
+div[data-testid="stExpander"] {
+    background-color: #1B2B46;
+    border: 1px solid #304969;
+    border-radius: 12px;
+}
 
-    **④ 신호 처리**
+div[data-testid="stTabs"] button {
+    color: #C4D2E5;
+}
 
-    변환된 데이터는 보정 및 영상 처리 과정을 거칩니다.
-    이 과정에서 행렬연산과 같은 수학적 계산이 활용됩니다.
-    """)
+div[data-testid="stAlert"] {
+    border-radius: 12px;
+}
 
-st.divider()
+.stButton button {
+    background-color: #2478B8;
+    color: white;
+    border: none;
+    border-radius: 9px;
+    min-height: 42px;
+}
 
-# =====================================
-# 3. 센서 측정값 설정
-# =====================================
+.stButton button:hover {
+    background-color: #329BD5;
+    color: white;
+}
 
-st.header("2. 이미지 센서의 픽셀값 설정")
+div[data-testid="stNumberInput"] input {
+    background-color: #203451;
+    color: white;
+}
 
-st.write(
-    "아래 숫자는 4개의 픽셀이 측정한 밝기를 "
-    "0~255 범위의 디지털 값으로 단순화한 것입니다."
-)
+hr {
+    border-color: #304969;
+}
 
-light = st.slider(
-    "빛의 세기 조절",
-    min_value=25,
-    max_value=150,
-    value=100,
-    step=5
-)
+.matrix-card {
+    background: #1B2B46;
+    border: 1px solid #345477;
+    border-radius: 14px;
+    padding: 17px;
+    margin-bottom: 12px;
+}
 
-st.write(f"현재 빛의 세기: {light}%")
+.matrix-title {
+    color: #79D9F2;
+    font-size: 15px;
+    font-weight: bold;
+    margin-bottom: 12px;
+}
 
-def input_matrix(title, prefix, defaults, minimum, maximum, step):
-    st.subheader(title)
+.matrix-table {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(55px, 1fr));
+    gap: 8px;
+}
 
-    matrix = []
+.matrix-cell {
+    background: #263D5D;
+    color: #FFFFFF;
+    text-align: center;
+    padding: 13px 5px;
+    border-radius: 8px;
+    font-size: 17px;
+    font-weight: bold;
+}
 
-    for i in range(2):
-        cols = st.columns(2)
-        row = []
+.process-card {
+    background: #1B2B46;
+    border-left: 4px solid #42BCE8;
+    border-radius: 10px;
+    padding: 16px;
+    margin: 10px 0;
+}
 
-        for j in range(2):
-            value = cols[j].number_input(
-                f"{prefix} ({i+1},{j+1})",
-                min_value=minimum,
-                max_value=maximum,
-                value=defaults[i][j],
-                step=step,
-                key=f"{prefix}_{i}_{j}"
+.process-label {
+    color: #70D7EF;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.process-description {
+    color: #D4E1F1;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.small-note {
+    color: #9DB7D8;
+    font-size: 12px;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+
+# ==========================================
+# 3. 행렬 화면 출력 함수
+# ==========================================
+
+def show_matrix(title, matrix, digits=1):
+
+    st.markdown(
+        f'<div class="matrix-card">'
+        f'<div class="matrix-title">{title}</div>'
+        f'<div class="matrix-table">',
+        unsafe_allow_html=True
+    )
+
+    for row in matrix:
+        for value in row:
+            number = f"{value:.{digits}f}"
+
+            st.markdown(
+                f'<div class="matrix-cell">{number}</div>',
+                unsafe_allow_html=True
             )
-            row.append(value)
 
-        matrix.append(row)
+    st.markdown(
+        '</div></div>',
+        unsafe_allow_html=True
+    )
 
-    return np.array(matrix, dtype=float)
 
-A = input_matrix(
-    "센서 측정 행렬 A",
-    "A",
-    [[80, 120], [160, 200]],
-    0, 255, 1
+def process_card(number, title, description):
+
+    st.markdown(
+        f"""
+        <div class="process-card">
+            <div class="process-label">
+                STEP {number}
+            </div>
+            <h4>{title}</h4>
+            <div class="process-description">
+                {description}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+# ==========================================
+# 4. 상단 제목
+# ==========================================
+
+st.markdown(
+    '<p style="color:#67CDEB; font-weight:bold;">'
+    'SEMICONDUCTOR EDUCATION LAB'
+    '</p>',
+    unsafe_allow_html=True
 )
 
-# 빛의 세기에 따른 센서값 변화
-sensor = A * (light / 100)
+st.title("CMOS SIGNAL LAB")
 
-sensor = np.clip(sensor, 0, 255)
-
-st.write("빛의 세기가 반영된 센서 데이터")
-
-st.dataframe(
-    np.round(sensor, 1),
-    use_container_width=True,
-    hide_index=True
-)
-
-st.divider()
-
-# =====================================
-# 4. 신호 처리 행렬 설정
-# =====================================
-
-st.header("3. 반도체 신호 처리 행렬 설정")
-
-st.write(
-    "센서에서 얻은 데이터를 변환하기 위한 "
-    "처리 계수 행렬 B를 설정합니다."
-)
-
-B = input_matrix(
-    "신호 처리 행렬 B",
-    "B",
-    [[1.2, 0.1], [0.1, 1.1]],
-    -2.0, 2.0, 0.1
+st.markdown(
+    "### 반도체 이미지 센서 신호 처리 시뮬레이터"
 )
 
 st.caption(
-    "행렬 B의 숫자를 바꾸면 센서 데이터의 변환 결과도 달라집니다."
+    "CMOS Image Sensor · Digital Signal · Matrix Processing"
 )
 
 st.divider()
 
-# =====================================
-# 5. 행렬연산 실행
-# =====================================
 
-st.header("4. 행렬연산 시뮬레이션")
+# ==========================================
+# 5. 핵심 정보 표시
+# ==========================================
 
-operation = st.radio(
-    "실행할 연산을 선택하세요.",
-    ["행렬 곱셈", "행렬 덧셈"],
-    horizontal=True
-)
+c1, c2, c3, c4 = st.columns(4)
 
-if operation == "행렬 곱셈":
-    raw_result = sensor @ B
-    st.write("센서 데이터와 처리 행렬의 곱셈")
-else:
-    raw_result = sensor + B
-    st.write("센서 데이터와 처리 행렬의 덧셈")
-
-# 신호 보정값
-offset = st.slider(
-    "신호 보정값 설정",
-    min_value=-50,
-    max_value=50,
-    value=0,
-    step=5
-)
-
-# 보정 전 결과와 보정 후 결과
-corrected = raw_result + offset
-
-# 디지털 밝기 범위 적용
-result = np.clip(corrected, 0, 255)
+c1.metric("센서 배열", "2 × 2 PIXELS")
+c2.metric("처리 방식", "MATRIX")
+c3.metric("디지털 변환", "ADC")
+c4.metric("출력 범위", "0 ~ 255")
 
 st.divider()
 
-# =====================================
-# 6. 처리 결과 비교
-# =====================================
 
-st.header("5. 신호 처리 결과 비교")
+# ==========================================
+# 6. 사이드바 센서 설정
+# ==========================================
 
-col1, col2, col3 = st.columns(3)
+st.sidebar.title("⚙️ SENSOR CONTROL")
 
-with col1:
-    st.subheader("센서 입력값")
-    st.dataframe(
-        np.round(sensor, 1),
-        use_container_width=True,
-        hide_index=True
-    )
+st.sidebar.caption("센서 입력값과 처리 조건을 설정하세요.")
 
-with col2:
-    st.subheader("처리 전 결과")
-    st.dataframe(
-        np.round(raw_result, 1),
-        use_container_width=True,
-        hide_index=True
-    )
+st.sidebar.subheader("① 픽셀 밝기 입력")
 
-with col3:
-    st.subheader("최종 처리 결과")
-    st.dataframe(
-        np.round(result, 1),
-        use_container_width=True,
-        hide_index=True
-    )
+default_values = [
+    [80, 120],
+    [160, 200]
+]
 
-st.success("반도체 신호 처리 시뮬레이션 완료!")
+pixel_values = []
 
-# =====================================
-# 7. 계산 과정 설명
-# =====================================
+for i in range(2):
 
-st.header("6. 행렬 계산 과정 확인")
+    row = []
 
-if operation == "행렬 곱셈":
+    cols = st.sidebar.columns(2)
+
+    for j in range(2):
+
+        value = cols[j].number_input(
+            f"P{i+1}{j+1}",
+            min_value=0,
+            max_value=100,
+            value=default_values[i][j],
+            key=f"pixel_{i}_{j}"
+        )
+
+        row.append(value)
+
+    pixel_values.append(row)
+
+light_matrix = np.array(pixel_values, dtype=float)
+
+st.sidebar.divider()
+
+st.sidebar.subheader("② 센서 설정")
+
+exposure = st.sidebar.slider(
+    "빛 감도 설정",
+    0.5,
+    2.0,
+    1.0,
+    0.1
+)
+
+adc_bits = st.sidebar.selectbox(
+    "ADC 해상도",
+    [8, 10, 12],
+    index=0
+)
+
+st.sidebar.divider()
+
+st.sidebar.subheader("③ 신호 처리 계수")
+
+gain = st.sidebar.slider(
+    "신호 증폭 계수",
+    0.5,
+    2.0,
+    1.0,
+    0.1
+)
+
+offset = st.sidebar.slider(
+    "신호 보정값",
+    -30,
+    30,
+    0,
+    1
+)
+
+st.sidebar.caption(
+    "※ 모든 수치는 교육용 모델을 위한 설정값입니다."
+)
+
+
+# ==========================================
+# 7. 센서 및 ADC 계산
+# ==========================================
+
+# 빛의 세기에 따른 가상 전압
+voltage = np.clip(
+    light_matrix * exposure * 3.3 / 100,
+    0,
+    3.3
+)
+
+# ADC 디지털 변환
+max_adc = (2 ** adc_bits) - 1
+
+adc_matrix = np.rint(
+    voltage / 3.3 * max_adc
+)
+
+# 8비트 밝기값으로 정규화
+digital_matrix = (
+    adc_matrix / max_adc * 255
+)
+
+
+# ==========================================
+# 8. 신호 처리 행렬
+# ==========================================
+
+B = np.array([
+    [1.2, 0.1],
+    [0.1, 1.1]
+])
+
+B = B * gain
+
+# 행렬 곱셈
+matrix_result = digital_matrix @ B
+
+# 보정값 추가
+corrected_matrix = matrix_result + offset
+
+# 디지털 출력 범위 제한
+final_matrix = np.clip(
+    corrected_matrix,
+    0,
+    255
+)
+
+
+# ==========================================
+# 9. 상단 메뉴
+# ==========================================
+
+tab1, tab2, tab3, tab4 = st.tabs([
+    "📡 전체 처리 과정",
+    "🔢 행렬 계산 분석",
+    "📊 데이터 비교",
+    "🧠 반도체 원리"
+])
+
+
+# ==========================================
+# TAB 1. 전체 처리 과정
+# ==========================================
+
+with tab1:
+
+    st.header("반도체 신호 처리 PROCESS")
 
     st.write(
-        "행렬 곱셈은 앞 행렬의 행과 "
-        "뒤 행렬의 열을 곱하고 더하는 방식입니다."
+        "빛이 센서에 들어온 순간부터 최종 디지털 데이터가 "
+        "만들어지는 과정까지 단계별로 확인할 수 있습니다."
+    )
+
+    st.markdown("## STEP 01. 빛 감지")
+
+    process_card(
+        "01",
+        "포토다이오드의 빛 감지",
+        "CMOS 이미지 센서의 각 픽셀에는 포토다이오드가 "
+        "있습니다. 빛이 들어오면 광전 효과에 의해 "
+        "전하가 생성됩니다. 빛의 양이 달라지면 "
+        "생성되는 전하량도 달라집니다."
+    )
+
+    show_matrix(
+        "픽셀별 빛의 세기 (%)",
+        light_matrix,
+        0
+    )
+
+    st.markdown("## STEP 02. 전기 신호 생성")
+
+    process_card(
+        "02",
+        "광전 변환 모델",
+        "포토다이오드에서 생성되는 전하를 이용하여 "
+        "전기 신호를 얻습니다. 아래 전압은 실제 소자의 "
+        "정확한 출력값이 아니라 빛의 세기에 비례한다고 "
+        "가정한 교육용 모델입니다."
+    )
+
+    show_matrix(
+        "가상 전압 행렬 (V)",
+        voltage,
+        3
+    )
+
+    st.markdown("## STEP 03. ADC 디지털 변환")
+
+    process_card(
+        "03",
+        "아날로그-디지털 변환",
+        "ADC는 연속적인 아날로그 신호를 "
+        "일정한 단계의 디지털 숫자로 변환합니다. "
+        "해상도가 높을수록 표현할 수 있는 단계가 많아집니다."
+    )
+
+    st.write(f"현재 ADC 해상도: {adc_bits} bit")
+    st.write(f"표현 가능한 단계 수: {max_adc + 1:,}개")
+
+    show_matrix(
+        "ADC 변환 결과",
+        adc_matrix,
+        0
+    )
+
+    st.markdown("## STEP 04. 디지털 데이터 정규화")
+
+    process_card(
+        "04",
+        "데이터 정규화",
+        "ADC의 출력값을 0~255 범위의 밝기 데이터로 "
+        "변환합니다. 서로 다른 ADC 해상도의 결과를 "
+        "동일한 범위에서 비교하기 위한 과정입니다."
+    )
+
+    show_matrix(
+        "정규화된 디지털 데이터",
+        digital_matrix,
+        1
+    )
+
+    st.markdown("## STEP 05. 행렬연산 및 신호 처리")
+
+    process_card(
+        "05",
+        "행렬 곱셈",
+        "디지털 데이터 행렬에 처리 계수 행렬을 곱합니다. "
+        "이 과정을 통해 여러 데이터가 일정한 수학적 "
+        "규칙에 따라 변환되는 모습을 확인할 수 있습니다."
+    )
+
+    show_matrix(
+        "신호 처리 행렬 B",
+        B,
+        2
+    )
+
+    show_matrix(
+        "행렬 곱셈 결과",
+        matrix_result,
+        2
+    )
+
+    st.markdown("## STEP 06. 신호 보정 및 최종 출력")
+
+    process_card(
+        "06",
+        "디지털 신호 보정",
+        "행렬연산 결과에 보정값을 더합니다. "
+        "이후 0~255 범위로 제한하여 최종 밝기 데이터를 "
+        "만듭니다. 이는 실제 영상 처리의 보정 개념을 "
+        "단순화한 예시입니다."
+    )
+
+    show_matrix(
+        "최종 출력 데이터",
+        final_matrix,
+        1
+    )
+
+    st.success("전체 신호 처리 과정 확인 완료!")
+
+
+# ==========================================
+# TAB 2. 행렬 계산 분석
+# ==========================================
+
+with tab2:
+
+    st.header("MATRIX PROCESSING ANALYSIS")
+
+    st.write(
+        "실제 숫자가 어떤 계산을 거쳐 최종 결과가 되는지 "
+        "하나씩 살펴봅니다."
+    )
+
+    st.subheader("① 입력 행렬")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        show_matrix(
+            "입력 데이터 A",
+            digital_matrix,
+            1
+        )
+
+    with col2:
+        show_matrix(
+            "처리 계수 B",
+            B,
+            2
+        )
+
+    st.subheader("② 행렬 곱셈 계산")
+
+    st.latex(
+        r"C=A\times B"
     )
 
     for i in range(2):
+
         for j in range(2):
 
-            first = sensor[i][0] * B[0][j]
-            second = sensor[i][1] * B[1][j]
+            a = digital_matrix[i][0]
+            b = digital_matrix[i][1]
 
-            st.write(
-                f"({i+1},{j+1}) 위치: "
-                f"({sensor[i][0]:.1f} × {B[0][j]:.1f}) + "
-                f"({sensor[i][1]:.1f} × {B[1][j]:.1f}) "
-                f"= {raw_result[i][j]:.1f}"
-            )
+            x = B[0][j]
+            y = B[1][j]
 
-else:
+            first = a * x
+            second = b * y
 
-    st.write(
-        "행렬 덧셈은 같은 위치에 있는 "
-        "숫자끼리 더하는 연산입니다."
+            with st.expander(
+                f"C[{i+1},{j+1}] 계산 과정 보기"
+            ):
+
+                st.write(
+                    f"첫 번째 곱셈: {a:.2f} × {x:.2f}"
+                )
+
+                st.write(
+                    f"두 번째 곱셈: {b:.2f} × {y:.2f}"
+                )
+
+                st.latex(
+                    rf"{first:.2f}+{second:.2f}"
+                    rf"={matrix_result[i][j]:.2f}"
+                )
+
+    st.subheader("③ 행렬 곱셈 최종 결과")
+
+    show_matrix(
+        "계산 결과 C",
+        matrix_result,
+        2
     )
 
+    st.subheader("④ 보정 과정")
+
+    st.latex(
+        r"D=\operatorname{clip}(C+\text{offset},0,255)"
+    )
+
+    st.write(f"현재 보정값: {offset}")
+
+    show_matrix(
+        "최종 출력 D",
+        final_matrix,
+        2
+    )
+
+
+# ==========================================
+# TAB 3. 데이터 비교
+# ==========================================
+
+with tab3:
+
+    st.header("BEFORE & AFTER")
+
+    st.write(
+        "행렬연산 전후의 데이터가 어떻게 달라졌는지 "
+        "한눈에 비교합니다."
+    )
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+
+        st.subheader("처리 전")
+
+        show_matrix(
+            "입력 데이터",
+            digital_matrix,
+            1
+        )
+
+    with col2:
+
+        st.subheader("처리 후")
+
+        show_matrix(
+            "최종 데이터",
+            final_matrix,
+            1
+        )
+
+    st.divider()
+
+    st.subheader("픽셀별 데이터 변화")
+
     for i in range(2):
+
         for j in range(2):
+
+            before = digital_matrix[i][j]
+            after = final_matrix[i][j]
+
             st.write(
-                f"({i+1},{j+1}) 위치: "
-                f"{sensor[i][j]:.1f} + "
-                f"{B[i][j]:.1f} "
-                f"= {raw_result[i][j]:.1f}"
+                f"픽셀 P{i+1}{j+1}: "
+                f"{before:.1f} → {after:.1f}"
             )
 
-st.write(f"추가 보정값: {offset}")
+            st.progress(
+                float(after / 255)
+            )
 
-st.write(
-    "최종 결과는 0~255 범위로 제한됩니다. "
-    "이는 디지털 밝기값을 단순화하여 표현한 것입니다."
-)
+    st.divider()
+
+    st.subheader("데이터 변화 그래프")
+
+    st.line_chart({
+        "처리 전": digital_matrix.flatten(),
+        "처리 후": final_matrix.flatten()
+    })
+
+
+# ==========================================
+# TAB 4. 반도체 원리
+# ==========================================
+
+with tab4:
+
+    st.header("SEMICONDUCTOR KNOWLEDGE")
+
+    st.subheader("① CMOS 이미지 센서")
+
+    st.write("""
+    CMOS 이미지 센서는 빛을 감지하여 전기 신호로 변환하는
+    반도체 소자입니다.
+
+    각 픽셀에는 포토다이오드와 신호 판독에 필요한
+    트랜지스터 등이 사용됩니다.
+    """)
+
+    st.subheader("② 포토다이오드")
+
+    st.write("""
+    포토다이오드는 빛을 받으면 광전 효과에 의해
+    전하를 생성합니다.
+
+    빛의 세기와 노출 조건에 따라 생성되는 전하량이 달라지고,
+    이를 이용하여 영상 정보를 얻을 수 있습니다.
+    """)
+
+    st.subheader("③ ADC")
+
+    st.write("""
+    ADC는 아날로그 신호를 디지털 숫자로 바꾸는 장치입니다.
+
+    예를 들어 8비트 ADC는 0부터 255까지 총 256단계로
+    신호를 표현할 수 있습니다.
+    """)
+
+    st.subheader("④ 행렬연산")
+
+    st.write("""
+    이미지의 픽셀 데이터를 행렬로 표현하면
+    여러 데이터를 한꺼번에 처리할 수 있습니다.
+
+    행렬 곱셈은 이미지 변환, 필터 처리,
+    인공지능 연산 등 다양한 분야에서 활용됩니다.
+    """)
+
+    st.subheader("⑤ 실제 기술과의 차이")
+
+    st.warning("""
+    이 시뮬레이터는 실제 반도체 제조 공정이나
+    CMOS 회로의 전기적 동작을 그대로 재현하지 않습니다.
+
+    빛 감지부터 디지털 데이터 처리까지의 개념을
+    이해하기 위해 단순화한 교육용 모델입니다.
+    """)
+
+
+# ==========================================
+# 10. 하단 안내
+# ==========================================
 
 st.divider()
 
-# =====================================
-# 8. 반도체와 행렬연산의 관계
-# =====================================
-
-st.header("7. 반도체와 행렬연산의 관계")
-
-st.markdown("""
-### ① 이미지 센서와 행렬
-
-이미지 센서는 수많은 픽셀로 구성되어 있습니다.
-각 픽셀에서 얻은 디지털 데이터는 행렬 형태로 표현할 수 있습니다.
-
-### ② 행렬 곱셈과 신호 처리
-
-행렬 곱셈은 여러 데이터에 일정한 변환 규칙을 적용하는 데
-활용할 수 있습니다.
-
-이미지 처리 및 인공지능 연산에서도 중요한 역할을 합니다.
-
-### ③ 신호 보정의 필요성
-
-센서에서 얻은 데이터는 상황에 따라 보정이 필요할 수 있습니다.
-밝기나 신호의 특성을 조절하는 과정은 이미지 처리의
-기본적인 개념 중 하나입니다.
-
-### ④ 실제 반도체 기술과의 연결
-
-실제 CMOS 이미지 센서에는 포토다이오드와
-트랜지스터 등의 반도체 소자가 사용됩니다.
-
-이 소자들이 빛을 전기 신호로 변환하고
-읽어내는 과정에 관여합니다.
-""")
-
-st.info(
-    "탐구 핵심: 반도체 이미지 센서에서 얻은 디지털 데이터를 "
-    "행렬로 표현하고, 행렬연산을 통해 신호가 변환되는 과정을 확인했습니다."
+st.markdown(
+    """
+    <div style="text-align:center; color:#8EA9CA;">
+        SEMICONDUCTOR SIGNAL LAB<br>
+        CMOS IMAGE SENSOR & MATRIX PROCESSING<br>
+        EDUCATIONAL SIMULATION
+    </div>
+    """,
+    unsafe_allow_html=True
 )
-
-st.caption("CMOS 반도체 이미지 센서 교육용 시뮬레이터")
