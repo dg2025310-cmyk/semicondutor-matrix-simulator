@@ -1,401 +1,321 @@
 
 import streamlit as st
 import numpy as np
+import pandas as pd
 
 # -----------------------------
-# 기본 페이지 설정
+# 1. 기본 설정
 # -----------------------------
 st.set_page_config(
-    page_title="CMOS 반도체 행렬연산 시뮬레이터",
+    page_title="반도체 행렬 연산 시뮬레이터",
     page_icon="🔬",
     layout="wide"
 )
 
-# -----------------------------
-# 화면 디자인
-# -----------------------------
 st.markdown("""
 <style>
 .stApp {
-    background-color: #101A2E;
-    color: #F4F7FC;
+    background-color: #081426;
+    color: #EAF2FF;
 }
-
-section[data-testid="stSidebar"] {
-    background-color: #17243B;
+h1, h2, h3 {
+    color: #8FC8FF !important;
 }
-
-h1, h2, h3, p, label {
-    color: #F4F7FC !important;
+p, label, span {
+    color: #EAF2FF;
 }
-
-[data-testid="stMetric"] {
-    background-color: #1D2D49;
-    padding: 18px;
-    border-radius: 12px;
-    border: 1px solid #344967;
-}
-
-.matrix-card {
-    background-color: #1D2D49;
-    border: 1px solid #344967;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 12px;
-}
-
-.matrix-title {
-    color: #8EC5FF;
-    font-weight: bold;
-    margin-bottom: 12px;
-}
-
-.matrix-table {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(55px, 1fr));
-    gap: 8px;
-    max-width: 260px;
-}
-
-.matrix-cell {
-    background-color: #263B5C;
-    color: #FFFFFF;
-    padding: 13px;
-    text-align: center;
-    border-radius: 7px;
-    font-weight: bold;
-}
-
-.process-card {
-    background-color: #1D2D49;
-    border-left: 4px solid #55A9FF;
-    border-radius: 8px;
+div[data-testid="stMetric"] {
+    background: #142944;
     padding: 15px;
-    margin-bottom: 10px;
+    border-radius: 12px;
 }
-
-.small-text {
-    color: #B9C9DF;
-    font-size: 14px;
+div[data-testid="stDataFrame"] {
+    background: #142944;
+    border-radius: 10px;
+}
+.stButton button {
+    background-color: #1769AA;
+    color: white;
+    border-radius: 8px;
+    border: none;
 }
 </style>
 """, unsafe_allow_html=True)
 
 
 # -----------------------------
-# 행렬 출력 함수
+# 2. 제목
 # -----------------------------
-def show_matrix(title, matrix, digits=1):
-    cells = ""
+st.title("🔬 반도체 행렬 연산 시뮬레이터")
 
-    for row in matrix:
-        for value in row:
-            number = f"{value:.{digits}f}"
-            cells += f'<div class="matrix-cell">{number}</div>'
+st.markdown("""
+### NPU 내부에서 행렬은 어떻게 계산될까?
 
-    html = f"""
-    <div class="matrix-card">
-        <div class="matrix-title">{title}</div>
-        <div class="matrix-table">
-            {cells}
-        </div>
-    </div>
-    """
-
-    st.markdown(html, unsafe_allow_html=True)
-
-
-# -----------------------------
-# 제목
-# -----------------------------
-st.title("🔬 CMOS 반도체 행렬연산 시뮬레이터")
-
-st.markdown(
-    "빛을 감지한 이미지 센서의 데이터가 디지털 신호로 변환되고, "
-    "행렬연산을 통해 보정되는 과정을 체험해 보는 시뮬레이터입니다."
-)
+인공지능 반도체인 NPU가 입력 데이터와 가중치 행렬을
+이용하여 연산하는 과정을 살펴보자.
+""")
 
 st.divider()
 
 
 # -----------------------------
-# 사용자 입력
+# 3. 반도체 연산 원리
 # -----------------------------
-st.sidebar.header("⚙️ 시뮬레이션 설정")
+st.subheader("01. 반도체 내부의 연산 구조")
 
-st.sidebar.subheader("① 픽셀별 빛의 세기")
+st.markdown("""
+NPU는 행렬 연산을 빠르게 처리하기 위해
+여러 연산 장치(Processing Element)를 활용할 수 있다.
 
-pixel_11 = st.sidebar.slider("픽셀 1", 0, 100, 80)
-pixel_12 = st.sidebar.slider("픽셀 2", 0, 100, 60)
-pixel_21 = st.sidebar.slider("픽셀 3", 0, 100, 40)
-pixel_22 = st.sidebar.slider("픽셀 4", 0, 100, 90)
+각 연산 장치는 곱셈과 누적 덧셈을 반복하는
+MAC 연산을 수행한다.
+""")
 
-light_matrix = np.array([
-    [pixel_11, pixel_12],
-    [pixel_21, pixel_22]
-], dtype=float)
+c1, c2, c3 = st.columns(3)
 
-st.sidebar.divider()
+with c1:
+    st.info("① 데이터 입력")
+    st.write("입력 행렬 A와 가중치 행렬 B가 연산 장치에 전달된다.")
 
-st.sidebar.subheader("② 센서 조건")
+with c2:
+    st.info("② MAC 연산")
+    st.write("대응하는 원소를 곱하고 그 결과를 누적해서 더한다.")
 
-exposure = st.sidebar.slider(
-    "노출 정도",
-    0.5, 2.0, 1.0, 0.1
-)
-
-adc_bits = st.sidebar.selectbox(
-    "ADC 해상도",
-    [8, 10, 12]
-)
-
-st.sidebar.divider()
-
-st.sidebar.subheader("③ 행렬연산 조건")
-
-gain = st.sidebar.slider(
-    "신호 보정 계수",
-    0.5, 1.5, 1.0, 0.1
-)
-
-offset = st.sidebar.slider(
-    "밝기 보정값",
-    -50, 50, 0
-)
-
-
-# -----------------------------
-# 센서 신호 계산
-# -----------------------------
-
-# 빛의 세기를 전압으로 변환
-voltage_matrix = light_matrix * exposure * 3.3 / 100
-voltage_matrix = np.clip(voltage_matrix, 0, 3.3)
-
-# ADC 변환
-max_adc = (2 ** adc_bits) - 1
-
-adc_matrix = np.rint(
-    voltage_matrix / 3.3 * max_adc
-)
-
-# 0~255 범위로 정규화
-digital_matrix = adc_matrix / max_adc * 255
-
-# -----------------------------
-# 행렬연산
-# -----------------------------
-
-# 신호 처리 행렬
-B = np.array([
-    [gain, 0.1],
-    [0.1, gain]
-])
-
-# 행렬 곱셈
-matrix_result = digital_matrix @ B
-
-# 밝기 보정
-final_matrix = matrix_result + offset
-
-# 출력값 범위 제한
-final_matrix = np.clip(final_matrix, 0, 255)
-
-
-# -----------------------------
-# 핵심 수치 표시
-# -----------------------------
-st.subheader("📊 시뮬레이션 결과")
-
-col1, col2, col3 = st.columns(3)
-
-col1.metric(
-    "ADC 해상도",
-    f"{adc_bits} bit"
-)
-
-col2.metric(
-    "최대 디지털 값",
-    f"{max_adc}"
-)
-
-col3.metric(
-    "평균 보정 밝기",
-    f"{np.mean(final_matrix):.1f}"
-)
+with c3:
+    st.info("③ 결과 출력")
+    st.write("누적 연산이 끝나면 결과 행렬 C가 만들어진다.")
 
 st.divider()
 
 
 # -----------------------------
-# 탭 구성
+# 4. 행렬 입력
 # -----------------------------
-tab1, tab2, tab3, tab4 = st.tabs([
-    "전체 처리 과정",
-    "행렬 계산 분석",
-    "데이터 비교",
-    "반도체 원리"
-])
+st.subheader("02. 연산에 사용할 행렬")
 
+st.write("""
+아래 두 행렬은 이해를 돕기 위한 예시 데이터다.
+숫자를 직접 바꾸면 연산 결과도 자동으로 바뀐다.
+""")
 
-# -----------------------------
-# TAB 1
-# -----------------------------
-with tab1:
+col1, col2 = st.columns(2)
 
-    st.subheader("이미지 센서 데이터 처리 과정")
-
-    st.markdown("""
-    <div class="process-card">
-        <b>STEP 1. 빛 감지</b><br>
-        CMOS 이미지 센서의 픽셀이 들어오는 빛을 감지합니다.
-    </div>
-
-    <div class="process-card">
-        <b>STEP 2. 전기 신호 생성</b><br>
-        포토다이오드에서 빛에 반응하여 전기적 신호가 만들어집니다.
-    </div>
-
-    <div class="process-card">
-        <b>STEP 3. ADC 변환</b><br>
-        아날로그 신호가 ADC를 통해 디지털 데이터로 변환됩니다.
-    </div>
-
-    <div class="process-card">
-        <b>STEP 4. 행렬연산</b><br>
-        디지털 데이터를 행렬로 표현하고 행렬 곱셈과 보정값을 적용합니다.
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.divider()
-
-    left, right = st.columns(2)
-
-    with left:
-        show_matrix("입력된 빛의 세기", light_matrix)
-
-    with right:
-        show_matrix("디지털 변환 데이터", digital_matrix)
-
-    left, right = st.columns(2)
-
-    with left:
-        show_matrix("행렬연산 결과", matrix_result)
-
-    with right:
-        show_matrix("최종 보정 데이터", final_matrix)
-
-
-# -----------------------------
-# TAB 2
-# -----------------------------
-with tab2:
-
-    st.subheader("행렬 계산 분석")
-
-    st.markdown(
-        "디지털 데이터 행렬에 신호 처리 행렬을 곱하는 과정을 확인합니다."
+with col1:
+    st.markdown("### 입력 행렬 A")
+    df_a = st.data_editor(
+        pd.DataFrame(
+            [[1, 2], [3, 4]],
+            columns=["열 1", "열 2"],
+            index=["행 1", "행 2"]
+        ),
+        key="matrix_a",
+        use_container_width=True,
+        num_rows="fixed"
     )
 
-    st.latex(r"A \times B = C")
-
-    left, right = st.columns(2)
-
-    with left:
-        show_matrix("A : 디지털 데이터 행렬", digital_matrix)
-
-    with right:
-        show_matrix("B : 신호 처리 행렬", B)
-
-    st.markdown("### 행렬 곱셈 결과")
-
-    show_matrix("C = A × B", matrix_result)
-
-    st.markdown("### 밝기 보정")
-
-    st.latex(r"D = C + k")
-
-    st.write(f"현재 밝기 보정값 k = {offset}")
-
-    show_matrix("최종 결과 D", final_matrix)
-
-
-# -----------------------------
-# TAB 3
-# -----------------------------
-with tab3:
-
-    st.subheader("처리 전후 데이터 비교")
-
-    before, after = st.columns(2)
-
-    with before:
-        show_matrix("처리 전 데이터", digital_matrix)
-
-    with after:
-        show_matrix("처리 후 데이터", final_matrix)
-
-    st.markdown("### 픽셀별 밝기 변화")
-
-    chart_data = {
-        "처리 전": digital_matrix.flatten().tolist(),
-        "처리 후": final_matrix.flatten().tolist()
-    }
-
-    st.line_chart(chart_data)
-
-    difference = final_matrix - digital_matrix
-
-    show_matrix("밝기 변화량", difference)
-
-
-# -----------------------------
-# TAB 4
-# -----------------------------
-with tab4:
-
-    st.subheader("CMOS 이미지 센서와 행렬연산")
-
-    st.markdown("""
-    ### 1. CMOS 이미지 센서란?
-
-    CMOS 이미지 센서는 카메라에 사용되는 반도체 센서입니다.
-    픽셀에 들어오는 빛을 감지하여 전기적 신호로 바꿉니다.
-
-    ### 2. ADC란?
-
-    ADC는 아날로그 신호를 디지털 데이터로 변환하는 장치입니다.
-    이 과정에서 빛에 대한 정보가 컴퓨터가 처리할 수 있는 숫자로 바뀝니다.
-
-    ### 3. 행렬연산은 왜 사용될까?
-
-    이미지 데이터는 여러 픽셀의 숫자로 이루어져 있기 때문에
-    행렬로 표현할 수 있습니다.
-
-    행렬 곱셈과 덧셈 등의 연산을 이용하면
-    이미지의 밝기나 신호를 보정하는 과정을 수학적으로 표현할 수 있습니다.
-
-    ### 4. 이번 시뮬레이션의 의미
-
-    이번 프로그램은 CMOS 이미지 센서의 전체 회로를 재현한 것이 아니라,
-    센서에서 만들어진 디지털 데이터가 행렬연산으로 처리되는 원리를
-    이해하기 위한 교육용 단순화 모델입니다.
-    """)
-
-    st.divider()
-
-    st.info(
-        "실제 반도체 내부의 신호 처리 방식은 이 시뮬레이션보다 훨씬 복잡하지만, "
-        "행렬연산이 디지털 데이터 처리에 활용되는 기본 원리를 확인할 수 있습니다."
+with col2:
+    st.markdown("### 가중치 행렬 B")
+    df_b = st.data_editor(
+        pd.DataFrame(
+            [[5, 6], [7, 8]],
+            columns=["열 1", "열 2"],
+            index=["행 1", "행 2"]
+        ),
+        key="matrix_b",
+        use_container_width=True,
+        num_rows="fixed"
     )
 
-
-# -----------------------------
-# 하단 안내
-# -----------------------------
-st.divider()
+A = df_a.to_numpy(dtype=float)
+B = df_b.to_numpy(dtype=float)
 
 st.caption(
-    "CMOS Semiconductor Matrix Simulation | "
-    "교육용 시뮬레이션 프로그램"
+    "※ 현재 예시는 2×2 행렬을 사용한다. "
+    "실제 NPU는 더 큰 행렬과 다양한 데이터 형식을 처리한다."
+)
+
+st.divider()
+
+
+# -----------------------------
+# 5. 행렬 연산
+# -----------------------------
+st.subheader("03. 행렬 곱셈 시작")
+
+if st.button("행렬 연산 실행", use_container_width=True):
+
+    C = A @ B
+
+    st.session_state["result"] = C
+    st.session_state["A"] = A
+    st.session_state["B"] = B
+
+    st.success("행렬 곱셈이 완료되었다!")
+
+
+# -----------------------------
+# 6. 계산 결과
+# -----------------------------
+if "result" in st.session_state:
+
+    A = st.session_state["A"]
+    B = st.session_state["B"]
+    C = st.session_state["result"]
+
+    st.markdown("### 최종 연산 결과")
+
+    r1, r2, r3 = st.columns(3)
+
+    with r1:
+        st.markdown("**입력 행렬 A**")
+        st.dataframe(
+            pd.DataFrame(A),
+            use_container_width=True
+        )
+
+    with r2:
+        st.markdown("**가중치 행렬 B**")
+        st.dataframe(
+            pd.DataFrame(B),
+            use_container_width=True
+        )
+
+    with r3:
+        st.markdown("**결과 행렬 C**")
+        st.dataframe(
+            pd.DataFrame(C),
+            use_container_width=True
+        )
+
+    st.latex(r"C=A\times B")
+
+    st.divider()
+
+    # -------------------------
+    # 7. MAC 연산 과정
+    # -------------------------
+    st.subheader("04. MAC 연산 과정 자세히 보기")
+
+    row = st.selectbox(
+        "확인할 결과 행 선택",
+        [0, 1],
+        format_func=lambda x: f"{x+1}번째 행"
+    )
+
+    col = st.selectbox(
+        "확인할 결과 열 선택",
+        [0, 1],
+        format_func=lambda x: f"{x+1}번째 열"
+    )
+
+    st.markdown("### 선택한 결과값이 만들어지는 과정")
+
+    st.write(
+        f"결과 행렬의 {row+1}행 {col+1}열을 계산한다."
+    )
+
+    total = 0
+
+    for k in range(A.shape[1]):
+
+        multiplication = A[row, k] * B[k, col]
+        before = total
+        total += multiplication
+
+        st.markdown(f"#### STEP {k+1}")
+
+        st.code(
+            f"{A[row, k]:g} × {B[k, col]:g} "
+            f"= {multiplication:g}"
+        )
+
+        st.write(
+            f"이전 누적값: {before:g}"
+        )
+
+        st.write(
+            f"현재 누적값: {before:g} + "
+            f"{multiplication:g} = {total:g}"
+        )
+
+        st.progress(
+            (k + 1) / A.shape[1]
+        )
+
+    st.success(
+        f"최종 결과: C[{row+1}, {col+1}] = {total:g}"
+    )
+
+    st.divider()
+
+    # -------------------------
+    # 8. 연산 원리 설명
+    # -------------------------
+    st.subheader("05. 반도체 내부에서는 무슨 일이 일어날까?")
+
+    st.markdown("""
+    **① 입력 데이터 전달**
+
+    행렬 A의 행 데이터와 행렬 B의 열 데이터가
+    연산 장치에 전달된다.
+
+    **② 곱셈 수행**
+
+    연산 장치 내부의 곱셈 회로가 두 값을 곱한다.
+
+    **③ 누적 덧셈 수행**
+
+    곱셈 결과를 누적 덧셈 회로에 전달하여
+    이전 계산 결과에 더한다.
+
+    **④ 결과 저장**
+
+    모든 곱셈과 누적 덧셈이 끝나면
+    해당 위치의 최종 결과를 저장한다.
+
+    이러한 과정이 반복되어 전체 결과 행렬이 만들어진다.
+    """)
+
+    st.info("""
+    실제 NPU에서는 여러 MAC 연산 장치가 병렬로 작동할 수 있다.
+    따라서 위 시뮬레이터의 순차적인 설명은 원리를 이해하기 위한
+    교육용 표현이며, 모든 NPU의 실제 동작 순서와 동일한 것은 아니다.
+    """)
+
+else:
+
+    st.info(
+        "먼저 행렬을 입력한 뒤 '행렬 연산 실행' 버튼을 눌러보자."
+    )
+
+
+# -----------------------------
+# 9. 학습 정리
+# -----------------------------
+st.divider()
+
+st.subheader("06. 핵심 개념 정리")
+
+with st.expander("행렬 곱셈이란?"):
+    st.write("""
+    한 행렬의 행과 다른 행렬의 열에 있는 원소를
+    각각 곱한 뒤 모두 더하는 연산이다.
+    """)
+
+with st.expander("MAC 연산이란?"):
+    st.write("""
+    MAC은 Multiply-Accumulate의 약자다.
+    두 수를 곱한 뒤 기존 누적값에 더하는 연산이다.
+    인공지능 반도체의 행렬 연산에 널리 활용된다.
+    """)
+
+with st.expander("NPU란?"):
+    st.write("""
+    NPU는 Neural Processing Unit의 약자다.
+    인공지능에 필요한 신경망 연산을 효율적으로 처리하도록
+    설계된 반도체 연산 장치다.
+    """)
+
+st.caption(
+    "교육용 시뮬레이터 | NPU 행렬 연산의 기본 원리 학습"
 )
