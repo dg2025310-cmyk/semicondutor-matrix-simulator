@@ -4,16 +4,16 @@ import numpy as np
 import pandas as pd
 
 # ==========================================
-# 1. PAGE CONFIG
+# 1. 화면 설정
 # ==========================================
 st.set_page_config(
-    page_title="NPU MATRIX ENGINE",
+    page_title="NPU 행렬 연산 시뮬레이터",
     page_icon="⚡",
     layout="centered"
 )
 
 # ==========================================
-# 2. DESIGN SYSTEM
+# 2. 디자인 설정
 # ==========================================
 st.markdown("""
 <style>
@@ -57,7 +57,7 @@ p, label {
 .hero-sub {
     color: #9BB8D6;
     font-size: 13px;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
 }
 
 .panel {
@@ -73,7 +73,6 @@ p, label {
     color: #46B7FF;
     font-size: 12px;
     font-weight: 800;
-    letter-spacing: 2px;
 }
 
 .step-title {
@@ -86,13 +85,6 @@ p, label {
 .small-text {
     color: #8FAAC8;
     font-size: 13px;
-}
-
-.arrow {
-    text-align: center;
-    color: #318BCC;
-    font-size: 28px;
-    margin: 10px;
 }
 
 .pe {
@@ -146,13 +138,8 @@ hr {
     border-color: #29415E;
 }
 
-/* 컴팩트한 대시보드 */
 [data-testid="stHorizontalBlock"] {
     gap: 0.8rem;
-}
-
-[data-testid="stMetric"] label {
-    font-size: 0.78rem;
 }
 
 @media (max-width: 700px) {
@@ -178,36 +165,36 @@ hr {
 
 
 # ==========================================
-# 3. HEADER
+# 3. 상단 제목
 # ==========================================
 st.markdown("""
 <div class="hero">
     <div class="hero-sub">
-        SEMICONDUCTOR TECHNOLOGY / AI ACCELERATOR
+        반도체 기술 / 인공지능 연산 장치
     </div>
     <div class="hero-title">
-        NPU MATRIX ENGINE
+        NPU 행렬 연산 시뮬레이터
     </div>
     <p>
-        Neural Processing Architecture & Matrix Computation Simulator
+        신경망 처리 구조와 행렬 계산 원리 체험
     </p>
     <div class="small-text">
-        MATRIX MULTIPLICATION · MAC · PARALLEL PROCESSING
+        행렬 곱셈 · 곱셈 누적 연산 · 병렬 처리
     </div>
 </div>
 """, unsafe_allow_html=True)
 
 
 # ==========================================
-# 4. PIPELINE OVERVIEW
+# 4. 처리 과정 안내
 # ==========================================
-st.markdown("### PROCESSING PIPELINE")
+st.markdown("### 전체 처리 과정")
 
 steps = [
-    ("01", "DATA INPUT"),
-    ("02", "MATRIX MAPPING"),
-    ("03", "PARALLEL COMPUTING"),
-    ("04", "OUTPUT ANALYSIS")
+    ("01", "데이터 입력"),
+    ("02", "행렬 배치"),
+    ("03", "병렬 연산"),
+    ("04", "결과 분석")
 ]
 
 for index in range(0, 4, 2):
@@ -219,7 +206,7 @@ for index in range(0, 4, 2):
         with col:
             st.markdown(f"""
             <div class="panel">
-                <div class="step-label">STEP {number}</div>
+                <div class="step-label">{number}단계</div>
                 <b>{name}</b>
             </div>
             """, unsafe_allow_html=True)
@@ -228,13 +215,13 @@ st.divider()
 
 
 # ==========================================
-# STEP 01. DATA INPUT
+# 1단계. 데이터 입력
 # ==========================================
 st.markdown("""
 <div class="panel">
-    <div class="step-label">STEP 01 / INPUT STAGE</div>
+    <div class="step-label">1단계 / 입력 과정</div>
     <div class="step-title">데이터 입력</div>
-    <p>Input Data & Weight Configuration</p>
+    <p>입력 데이터와 가중치 설정</p>
     <div class="small-text">
     입력 데이터와 가중치 데이터를 설정한다.
     </div>
@@ -266,12 +253,12 @@ default_B = np.array([
 col_a, col_b = st.columns(2)
 
 with col_a:
-    st.markdown("#### INPUT MATRIX A")
+    st.markdown("#### 입력 행렬 A")
 
     df_A = st.data_editor(
         pd.DataFrame(
             default_A,
-            columns=["C1", "C2", "C3", "C4"]
+            columns=["1열", "2열", "3열", "4열"]
         ),
         key="input_A",
         use_container_width=True,
@@ -279,12 +266,12 @@ with col_a:
     )
 
 with col_b:
-    st.markdown("#### WEIGHT MATRIX B")
+    st.markdown("#### 가중치 행렬 B")
 
     df_B = st.data_editor(
         pd.DataFrame(
             default_B,
-            columns=["C1", "C2", "C3", "C4"]
+            columns=["1열", "2열", "3열", "4열"]
         ),
         key="input_B",
         use_container_width=True,
@@ -313,7 +300,7 @@ except (ValueError, TypeError):
 
 st.markdown("""
 <div class="small-text">
-DATA TYPE : SIGNED INTEGER / EDUCATIONAL INPUT
+데이터 형식 : 부호가 있는 정수 / 교육용 입력 데이터
 </div>
 """, unsafe_allow_html=True)
 
@@ -321,13 +308,13 @@ st.divider()
 
 
 # ==========================================
-# STEP 02. MATRIX MAPPING
+# 2단계. 행렬 배치
 # ==========================================
 st.markdown("""
 <div class="panel">
-    <div class="step-label">STEP 02 / MAPPING STAGE</div>
+    <div class="step-label">2단계 / 데이터 배치 과정</div>
     <div class="step-title">행렬 변환 및 데이터 배치</div>
-    <p>Matrix Mapping & Data Arrangement</p>
+    <p>행렬 구성과 데이터 배열</p>
     <div class="small-text">
     입력된 데이터를 연산 가능한 행렬 구조로 구성한다.
     </div>
@@ -344,23 +331,23 @@ st.write("""
 map1, map2, map3 = st.columns([1, 0.5, 1])
 
 with map1:
-    st.markdown("#### MATRIX A")
+    st.markdown("#### 행렬 A")
     st.dataframe(pd.DataFrame(A), use_container_width=True)
 
 with map2:
-    st.markdown("#### OPERATION")
+    st.markdown("#### 연산")
     st.markdown(
         "<h2 style='text-align:center;color:#55B9FF'>×</h2>",
         unsafe_allow_html=True
     )
 
 with map3:
-    st.markdown("#### MATRIX B")
+    st.markdown("#### 행렬 B")
     st.dataframe(pd.DataFrame(B), use_container_width=True)
 
 st.markdown("""
 <div class="panel">
-    <b>DATA MAPPING PRINCIPLE</b>
+    <b>데이터 배치 원리</b>
     <p>
     행렬 A의 각 행과 행렬 B의 각 열이 서로 대응한다.
     대응하는 원소들은 곱셈과 누적 덧셈을 통해
@@ -373,23 +360,23 @@ st.divider()
 
 
 # ==========================================
-# STEP 03. PARALLEL COMPUTING
+# 3단계. 병렬 연산
 # ==========================================
 st.markdown("""
 <div class="panel">
-    <div class="step-label">STEP 03 / COMPUTING STAGE</div>
+    <div class="step-label">3단계 / 연산 과정</div>
     <div class="step-title">병렬 행렬 연산</div>
-    <p>Processing Element Array & MAC Operation</p>
+    <p>연산 처리 장치 배열과 곱셈 누적 연산</p>
     <div class="small-text">
     여러 연산 장치가 각각의 행렬 원소를 계산하는 원리를 확인한다.
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-st.markdown("### 3-1. PE ARRAY ARCHITECTURE")
+st.markdown("### 3-1. 연산 처리 장치 배열 구조")
 
 st.write("""
-PE(Processing Element)는 연산을 담당하는 처리 장치다.
+PE(연산 처리 장치)는 연산을 담당하는 처리 장치다.
 
 이번 시뮬레이터는 결과 행렬의 각 원소를
 하나의 PE가 담당하는 4×4 교육용 구조를 사용한다.
@@ -397,7 +384,7 @@ PE(Processing Element)는 연산을 담당하는 처리 장치다.
 
 C = A @ B
 
-# PE Array
+# 연산 처리 장치 배열
 for i in range(4):
     pe_cols = st.columns(4)
 
@@ -405,39 +392,38 @@ for i in range(4):
         with pe_cols[j]:
             st.markdown(f"""
             <div class="pe">
-                <div class="pe-name">PE {i+1}-{j+1}</div>
+                <div class="pe-name">처리 장치 {i+1}-{j+1}</div>
                 <div class="pe-value">{C[i,j]}</div>
             </div>
             """, unsafe_allow_html=True)
 
 st.caption(
-    "각 PE에 표시된 숫자는 해당 위치의 최종 연산 결과다. "
-    "이는 병렬 연산 원리를 설명하기 위한 논리적 매핑이다."
+    "각 처리 장치에 표시된 숫자는 해당 위치의 최종 연산 결과다. "
+    "이는 병렬 연산 원리를 설명하기 위한 논리적 배치다."
 )
 
 st.divider()
 
 
 # ==========================================
-# MAC OPERATION
+# 곱셈 및 누적 연산
 # ==========================================
-st.markdown("### 3-2. MAC COMPUTATION")
+st.markdown("### 3-2. 곱셈 및 누적 연산")
 
 st.write("""
-MAC은 Multiply-Accumulate의 약자다.
-곱셈 결과를 누적해서 더하는 연산 구조다.
+곱셈 누적 연산은 곱셈 결과를 차례대로 더하는 연산 구조다.
 """)
 
 row = st.selectbox(
-    "연산 과정을 확인할 PE의 행",
+    "연산 과정을 확인할 처리 장치의 행",
     range(4),
-    format_func=lambda x: f"ROW {x+1}"
+    format_func=lambda x: f"{x+1}행"
 )
 
 col = st.selectbox(
-    "연산 과정을 확인할 PE의 열",
+    "연산 과정을 확인할 처리 장치의 열",
     range(4),
-    format_func=lambda x: f"COLUMN {x+1}"
+    format_func=lambda x: f"{x+1}열"
 )
 
 total = 0
@@ -449,14 +435,14 @@ for k in range(4):
     total += product
 
     mac_data.append({
-        "연산 단계": f"MAC {k+1}",
+        "연산 단계": f"{k+1}단계",
         "A 데이터": int(A[row, k]),
         "B 데이터": int(B[k, col]),
         "곱셈 결과": product,
         "누적 결과": total
     })
 
-    st.markdown(f"**MAC UNIT {k+1}**")
+    st.markdown(f"**{k+1}번째 연산 과정**")
 
     st.code(
         f"{A[row,k]} × {B[k,col]} = {product}\n"
@@ -470,27 +456,27 @@ st.dataframe(
 )
 
 st.success(
-    f"PE {row+1}-{col+1} 최종 출력값 : {total}"
+    f"{row+1}행 {col+1}열의 최종 결과값 : {total}"
 )
 
 st.divider()
 
 
 # ==========================================
-# 3-3. PARALLEL PROCESSING
+# 3-3. 병렬 처리 원리
 # ==========================================
-st.markdown("### 3-3. PARALLEL PROCESSING")
+st.markdown("### 3-3. 병렬 처리 원리")
 
 st.markdown("""
 <div class="panel">
-    <b>PARALLEL COMPUTING PRINCIPLE</b>
+    <b>병렬 연산 원리</b>
     <p>
     4×4 결과 행렬에는 총 16개의 출력 원소가 존재한다.
-    각 출력 원소의 계산을 서로 다른 PE에 배정하면
+    각 출력 원소의 계산을 서로 다른 처리 장치에 배정하면
     여러 결과를 병렬로 계산할 수 있다.
     </p>
     <p>
-    각 PE는 4개의 곱셈과 누적 과정을 수행한다.
+    각 처리 장치는 4개의 곱셈과 누적 과정을 수행한다.
     </p>
 </div>
 """, unsafe_allow_html=True)
@@ -498,50 +484,50 @@ st.markdown("""
 p1, p2, p3 = st.columns(3)
 
 with p1:
-    st.metric("PE UNITS", "16")
+    st.metric("연산 장치 수", "16개")
 
 with p2:
-    st.metric("MAC PER PE", "4")
+    st.metric("장치당 곱셈 횟수", "4회")
 
 with p3:
-    st.metric("TOTAL MAC", "64")
+    st.metric("전체 곱셈 횟수", "64회")
 
 st.caption("""
-※ 이 수치는 16개 PE에 출력 원소를 하나씩 배정한 교육용 가정이다.
-실제 NPU의 PE 개수, 데이터 흐름, 병렬화 방식은 설계에 따라 달라진다.
+※ 이 수치는 16개 처리 장치에 출력 원소를 하나씩 배정한 교육용 가정이다.
+실제 NPU의 처리 장치 개수, 데이터 흐름, 병렬화 방식은 설계에 따라 달라진다.
 """)
 
 st.divider()
 
 
 # ==========================================
-# STEP 04. OUTPUT ANALYSIS
+# 4단계. 결과 분석
 # ==========================================
 st.markdown("""
 <div class="panel">
-    <div class="step-label">STEP 04 / OUTPUT STAGE</div>
+    <div class="step-label">4단계 / 결과 확인 과정</div>
     <div class="step-title">결과 전달 및 연산 분석</div>
-    <p>Output Matrix & Performance Analysis</p>
+    <p>최종 행렬과 연산량 분석</p>
     <div class="small-text">
     행렬 연산의 최종 결과와 계산 구조를 분석한다.
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-st.markdown("### 4-1. FINAL OUTPUT MATRIX")
+st.markdown("### 4-1. 최종 결과 행렬")
 
 st.dataframe(
     pd.DataFrame(
         C,
-        index=["ROW 1", "ROW 2", "ROW 3", "ROW 4"],
-        columns=["COL 1", "COL 2", "COL 3", "COL 4"]
+        index=["1행", "2행", "3행", "4행"],
+        columns=["1열", "2열", "3열", "4열"]
     ),
     use_container_width=True
 )
 
 st.markdown("""
 <div class="result-box">
-    <h3 style="color:#72E2C2">PROCESSING COMPLETED</h3>
+    <h3 style="color:#72E2C2">연산 완료</h3>
     <p>
     입력 행렬과 가중치 행렬의 곱셈이 완료되었다.
     생성된 결과는 다음 신경망 연산 단계 등으로 전달될 수 있다.
@@ -553,25 +539,24 @@ st.divider()
 
 
 # ==========================================
-# 4-2. COMPUTATION ANALYSIS
+# 4-2. 연산량 분석
 # ==========================================
-st.markdown("### 4-2. COMPUTATION ANALYSIS")
+st.markdown("### 4-2. 연산량 분석")
 
 multiplications = 4 * 4 * 4
 accumulations = 4 * 4 * 3
 total_macs = 4 * 4 * 4
-total_arithmetic = multiplications + accumulations
 
 m1, m2, m3 = st.columns(3)
 
 with m1:
-    st.metric("MULTIPLICATIONS", f"{multiplications}")
+    st.metric("곱셈 횟수", f"{multiplications}회")
 
 with m2:
-    st.metric("ACCUMULATIONS", f"{accumulations}")
+    st.metric("누적 덧셈 횟수", f"{accumulations}회")
 
 with m3:
-    st.metric("OUTPUT ELEMENTS", "16")
+    st.metric("결과 원소 개수", "16개")
 
 st.markdown("#### 연산량 구성")
 
@@ -594,7 +579,7 @@ st.bar_chart(
 
 st.markdown("""
 <div class="panel">
-    <b>RESULT INTERPRETATION</b>
+    <b>결과 해석</b>
     <p>
     4×4 행렬 곱셈은 16개의 결과 원소를 생성한다.
     각 결과 원소마다 4번의 곱셈이 필요하므로
@@ -611,20 +596,20 @@ st.divider()
 
 
 # ==========================================
-# SYSTEM SUMMARY
+# 최종 시스템 요약
 # ==========================================
-st.markdown("### SYSTEM SUMMARY")
+st.markdown("### 전체 시스템 요약")
 
 st.write("""
 | 처리 단계 | 주요 역할 |
 |---|---|
-| DATA INPUT | 입력 데이터와 가중치 설정 |
-| MATRIX MAPPING | 행렬 구성 및 데이터 배치 |
-| PARALLEL COMPUTING | PE Array를 통한 MAC 연산 |
-| OUTPUT ANALYSIS | 결과 행렬 생성 및 연산량 분석 |
+| 데이터 입력 | 입력 데이터와 가중치 설정 |
+| 행렬 배치 | 행렬 구성 및 데이터 배치 |
+| 병렬 연산 | 처리 장치를 통한 곱셈 누적 연산 |
+| 결과 분석 | 결과 행렬 생성 및 연산량 분석 |
 """)
 
 st.caption(
-    "NPU MATRIX ENGINE | EDUCATIONAL SIMULATION "
+    "NPU 행렬 연산 시뮬레이터 | 교육용 모의 실험 "
     "| 실제 NPU 회로를 그대로 재현한 것은 아님"
 )
