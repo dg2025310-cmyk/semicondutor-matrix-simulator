@@ -3,335 +3,587 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 
-# -------------------------
-# 1. 기본 설정
-# -------------------------
+# ==========================================
+# 1. PAGE CONFIG
+# ==========================================
 st.set_page_config(
-    page_title="반도체 행렬 연산 시뮬레이터",
-    page_icon="🔬",
+    page_title="NPU MATRIX ENGINE",
+    page_icon="⚡",
     layout="wide"
 )
 
-# -------------------------
-# 2. 디자인
-# -------------------------
+# ==========================================
+# 2. DESIGN SYSTEM
+# ==========================================
 st.markdown("""
 <style>
 .stApp {
-    background-color: #081426;
-    color: #EAF2FF;
+    background: #07111F;
+    color: #E5EEFF;
 }
 
 [data-testid="stHeader"] {
-    background-color: #081426;
+    background: #07111F;
 }
 
 h1, h2, h3, h4 {
-    color: #8FC8FF !important;
+    color: #E5EEFF !important;
 }
 
-p, label, span {
-    color: #EAF2FF;
+p, label {
+    color: #C2D3E9;
 }
 
-.step-card {
-    background-color: #142944;
-    border: 1px solid #294766;
-    border-radius: 14px;
-    padding: 25px;
-    margin-top: 15px;
-    margin-bottom: 15px;
+.block-container {
+    max-width: 1250px;
+    padding-top: 2rem;
+    padding-bottom: 4rem;
 }
 
-.step-number {
-    color: #65B9FF;
-    font-size: 14px;
-    font-weight: bold;
+.hero {
+    background: linear-gradient(120deg,#102B4B,#0B1930);
+    border: 1px solid #23517B;
+    padding: 30px;
+    border-radius: 18px;
+    margin-bottom: 25px;
+}
+
+.hero-title {
+    font-size: 34px;
+    font-weight: 800;
+    color: #80C8FF;
+    letter-spacing: 1px;
+}
+
+.hero-sub {
+    color: #9BB8D6;
+    font-size: 13px;
+    letter-spacing: 2px;
+}
+
+.panel {
+    background: #101F34;
+    border: 1px solid #253F5D;
+    border-radius: 15px;
+    padding: 22px;
+    margin-top: 12px;
+    margin-bottom: 12px;
+}
+
+.step-label {
+    color: #46B7FF;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 2px;
 }
 
 .step-title {
-    color: #8FC8FF;
-    font-size: 25px;
-    font-weight: bold;
+    color: #E5EEFF;
+    font-size: 27px;
+    font-weight: 750;
     margin-top: 5px;
 }
 
-.step-description {
-    color: #D6E8FF;
-    font-size: 15px;
+.small-text {
+    color: #8FAAC8;
+    font-size: 13px;
 }
 
 .arrow {
     text-align: center;
-    color: #65B9FF;
-    font-size: 30px;
-    padding: 5px;
+    color: #318BCC;
+    font-size: 28px;
+    margin: 10px;
 }
 
-.stButton > button {
-    background-color: #1769AA;
-    color: white;
+.pe {
+    background: #142D49;
+    border: 1px solid #3274A7;
     border-radius: 8px;
-    border: none;
-    height: 45px;
+    padding: 10px 3px;
+    text-align: center;
+    margin: 2px;
 }
 
-div[data-testid="stDataFrame"] {
-    background-color: #142944;
-    border-radius: 10px;
+.pe-name {
+    color: #6CAEE5;
+    font-size: 10px;
+}
+
+.pe-value {
+    color: #FFFFFF;
+    font-size: 19px;
+    font-weight: bold;
+}
+
+.result-box {
+    background: #102C36;
+    border: 1px solid #268A78;
+    padding: 20px;
+    border-radius: 13px;
+}
+
+.stButton button {
+    background: #1769AA;
+    color: white;
+    border: 1px solid #318BCC;
+    border-radius: 9px;
+    height: 43px;
 }
 
 div[data-testid="stMetric"] {
-    background-color: #142944;
-    padding: 15px;
+    background: #10243B;
+    border: 1px solid #294A6A;
+    padding: 16px;
     border-radius: 12px;
+}
+
+div[data-testid="stDataFrame"] {
+    border: 1px solid #294A6A;
+    border-radius: 10px;
+}
+
+hr {
+    border-color: #29415E;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
 
-# -------------------------
-# 3. 제목
-# -------------------------
-st.title("🔬 반도체 행렬 연산 시뮬레이터")
-
+# ==========================================
+# 3. HEADER
+# ==========================================
 st.markdown("""
-인공지능 반도체 NPU 내부에서 데이터가 입력되고,
-행렬로 변환되어 최종 결과가 만들어지는 과정을 알아보자.
-""")
-
-st.markdown("---")
-
-
-# -------------------------
-# 01. 데이터 입력
-# -------------------------
-st.markdown("""
-<div class="step-card">
-    <div class="step-number">STEP 01</div>
-    <div class="step-title">데이터 입력</div>
-    <div class="step-description">
-    연산에 필요한 숫자 데이터를 입력하는 단계
+<div class="hero">
+    <div class="hero-sub">
+        SEMICONDUCTOR TECHNOLOGY / AI ACCELERATOR
+    </div>
+    <div class="hero-title">
+        NPU MATRIX ENGINE
+    </div>
+    <p>
+        Neural Processing Architecture & Matrix Computation Simulator
+    </p>
+    <div class="small-text">
+        MATRIX MULTIPLICATION · MAC · PARALLEL PROCESSING
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-st.write("""
-인공지능 반도체는 이미지, 음성 등의 정보를
-숫자 형태로 입력받아 처리한다.
 
-아래는 행렬 연산을 이해하기 위한 예시 데이터다.
-""")
+# ==========================================
+# 4. PIPELINE OVERVIEW
+# ==========================================
+st.markdown("### PROCESSING PIPELINE")
 
-cols = st.columns(4)
+pipeline = st.columns(4)
 
-default_values = [1, 2, 3, 4]
-input_values = []
+steps = [
+    ("01", "DATA INPUT"),
+    ("02", "MATRIX MAPPING"),
+    ("03", "PARALLEL COMPUTING"),
+    ("04", "OUTPUT ANALYSIS")
+]
 
-for i, col in enumerate(cols):
+for col, (number, name) in zip(pipeline, steps):
     with col:
-        value = st.number_input(
-            f"데이터 {i+1}",
-            min_value=0,
-            max_value=255,
-            value=default_values[i],
-            key=f"input_{i}"
-        )
-        input_values.append(value)
-
-st.session_state["input_values"] = input_values
-
-st.info("입력된 숫자 데이터는 다음 단계에서 행렬로 변환된다.")
-
-
-# 화살표
-st.markdown('<div class="arrow">↓</div>', unsafe_allow_html=True)
-
-
-# -------------------------
-# 02. 행렬 변환
-# -------------------------
-st.markdown("""
-<div class="step-card">
-    <div class="step-number">STEP 02</div>
-    <div class="step-title">행렬 변환</div>
-    <div class="step-description">
-    입력 데이터를 행렬 형태로 구성하는 단계
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
-st.write("""
-입력된 숫자를 2×2 행렬로 배열한다.
-또한 연산에 사용되는 가중치 행렬을 준비한다.
-""")
-
-A = np.array(input_values).reshape(2, 2)
-
-B = np.array([
-    [5, 6],
-    [7, 8]
-])
-
-col1, col2 = st.columns(2)
-
-with col1:
-    st.subheader("입력 행렬 A")
-    st.dataframe(
-        pd.DataFrame(A),
-        use_container_width=True
-    )
-
-with col2:
-    st.subheader("가중치 행렬 B")
-    st.dataframe(
-        pd.DataFrame(B),
-        use_container_width=True
-    )
-
-st.session_state["A"] = A
-st.session_state["B"] = B
-
-st.success("숫자 데이터가 행렬 형태로 구성되었다.")
-
-st.caption(
-    "가중치 행렬은 설명을 위한 예시값이다. "
-    "실제 인공지능에서는 학습을 통해 정해진 가중치를 사용한다."
-)
-
-
-st.markdown('<div class="arrow">↓</div>', unsafe_allow_html=True)
-
-
-# -------------------------
-# 03. 행렬 연산
-# -------------------------
-st.markdown("""
-<div class="step-card">
-    <div class="step-number">STEP 03</div>
-    <div class="step-title">행렬 연산</div>
-    <div class="step-description">
-    곱셈과 누적 덧셈을 반복하여 결과를 계산하는 단계
-    </div>
-</div>
-""", unsafe_allow_html=True)
-
-st.write("""
-두 행렬의 행과 열에 해당하는 숫자를 곱한 뒤
-그 결과를 더하는 과정을 반복한다.
-이러한 연산 구조를 MAC이라고 한다.
-""")
-
-selected_row = st.selectbox(
-    "계산할 결과의 행",
-    [0, 1],
-    format_func=lambda x: f"{x+1}번째 행"
-)
-
-selected_col = st.selectbox(
-    "계산할 결과의 열",
-    [0, 1],
-    format_func=lambda x: f"{x+1}번째 열"
-)
-
-total = 0
-
-for k in range(2):
-    multiply = A[selected_row, k] * B[k, selected_col]
-    before = total
-    total += multiply
-
-    st.markdown(f"**연산 {k+1}**")
-
-    st.latex(
-        f"{A[selected_row,k]:g}"
-        + r" \times "
-        + f"{B[k,selected_col]:g}"
-        + f" = {multiply:g}"
-    )
-
-    st.write(
-        f"누적 계산: {before:g} + {multiply:g} = {total:g}"
-    )
-
-C = A @ B
+        st.markdown(f"""
+        <div class="panel">
+            <div class="step-label">STEP {number}</div>
+            <b>{name}</b>
+        </div>
+        """, unsafe_allow_html=True)
 
 st.divider()
 
-st.subheader("전체 행렬 곱셈")
 
-st.latex(r"C=A\times B")
-
-st.dataframe(
-    pd.DataFrame(C),
-    use_container_width=True
-)
-
-st.session_state["result"] = C
-
-st.info("""
-MAC은 Multiply-Accumulate의 약자다.
-곱셈 결과를 누적해서 더하는 연산으로,
-행렬 곱셈의 각 결과값을 계산할 때 활용된다.
-""")
-
-
-st.markdown('<div class="arrow">↓</div>', unsafe_allow_html=True)
-
-
-# -------------------------
-# 04. 결과 전달
-# -------------------------
+# ==========================================
+# STEP 01. DATA INPUT
+# ==========================================
 st.markdown("""
-<div class="step-card">
-    <div class="step-number">STEP 04</div>
-    <div class="step-title">결과 전달</div>
-    <div class="step-description">
-    계산된 결과 행렬을 생성하고 다음 연산 단계로 전달하는 단계
+<div class="panel">
+    <div class="step-label">STEP 01 / INPUT STAGE</div>
+    <div class="step-title">데이터 입력</div>
+    <p>Input Data & Weight Configuration</p>
+    <div class="small-text">
+    입력 데이터와 가중치 데이터를 설정한다.
     </div>
 </div>
 """, unsafe_allow_html=True)
 
 st.write("""
-모든 행렬 계산이 완료되면 최종 결과 행렬이 만들어진다.
-이 결과는 다음 신경망 연산 단계 등에서 활용될 수 있다.
+인공지능 연산에서는 입력 데이터와 학습된 가중치가
+행렬 연산에 사용된다.
+
+아래 숫자는 원리를 이해하기 위한 예시 데이터이며,
+직접 수정하여 결과를 비교할 수 있다.
 """)
 
-st.subheader("최종 결과 행렬")
+default_A = np.array([
+    [1, 2, 3, 4],
+    [2, 1, 4, 3],
+    [3, 2, 1, 4],
+    [4, 3, 2, 1]
+])
+
+default_B = np.array([
+    [1, 0, 2, 1],
+    [0, 1, 1, 2],
+    [2, 1, 0, 1],
+    [1, 2, 1, 0]
+])
+
+col_a, col_b = st.columns(2)
+
+with col_a:
+    st.markdown("#### INPUT MATRIX A")
+
+    df_A = st.data_editor(
+        pd.DataFrame(
+            default_A,
+            columns=["C1", "C2", "C3", "C4"]
+        ),
+        key="input_A",
+        use_container_width=True,
+        num_rows="fixed"
+    )
+
+with col_b:
+    st.markdown("#### WEIGHT MATRIX B")
+
+    df_B = st.data_editor(
+        pd.DataFrame(
+            default_B,
+            columns=["C1", "C2", "C3", "C4"]
+        ),
+        key="input_B",
+        use_container_width=True,
+        num_rows="fixed"
+    )
+
+try:
+    A_float = df_A.to_numpy(dtype=float)
+    B_float = df_B.to_numpy(dtype=float)
+
+    if not np.all(np.isfinite(A_float)) or not np.all(np.isfinite(B_float)):
+        raise ValueError("유효하지 않은 숫자")
+
+    if not np.all(A_float == np.floor(A_float)) or not np.all(B_float == np.floor(B_float)):
+        raise ValueError("정수만 입력 가능")
+
+    if np.max(np.abs(A_float)) > 127 or np.max(np.abs(B_float)) > 127:
+        raise ValueError("입력 범위 초과")
+
+    A = A_float.astype(np.int64)
+    B = B_float.astype(np.int64)
+
+except (ValueError, TypeError):
+    st.error("행렬에는 -127부터 127까지의 정수만 입력해 주세요.")
+    st.stop()
+
+st.markdown("""
+<div class="small-text">
+DATA TYPE : SIGNED INTEGER / EDUCATIONAL INPUT
+</div>
+""", unsafe_allow_html=True)
+
+st.divider()
+
+
+# ==========================================
+# STEP 02. MATRIX MAPPING
+# ==========================================
+st.markdown("""
+<div class="panel">
+    <div class="step-label">STEP 02 / MAPPING STAGE</div>
+    <div class="step-title">행렬 변환 및 데이터 배치</div>
+    <p>Matrix Mapping & Data Arrangement</p>
+    <div class="small-text">
+    입력된 데이터를 연산 가능한 행렬 구조로 구성한다.
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+st.write("""
+두 행렬의 곱셈을 수행하려면 첫 번째 행렬의 열 개수와
+두 번째 행렬의 행 개수가 같아야 한다.
+
+현재 두 행렬은 4×4 구조이므로 결과도 4×4 행렬이 된다.
+""")
+
+map1, map2, map3 = st.columns([1, 0.5, 1])
+
+with map1:
+    st.markdown("#### MATRIX A")
+    st.dataframe(pd.DataFrame(A), use_container_width=True)
+
+with map2:
+    st.markdown("#### OPERATION")
+    st.markdown(
+        "<h2 style='text-align:center;color:#55B9FF'>×</h2>",
+        unsafe_allow_html=True
+    )
+
+with map3:
+    st.markdown("#### MATRIX B")
+    st.dataframe(pd.DataFrame(B), use_container_width=True)
+
+st.markdown("""
+<div class="panel">
+    <b>DATA MAPPING PRINCIPLE</b>
+    <p>
+    행렬 A의 각 행과 행렬 B의 각 열이 서로 대응한다.
+    대응하는 원소들은 곱셈과 누적 덧셈을 통해
+    결과 행렬의 한 원소를 생성한다.
+    </p>
+</div>
+""", unsafe_allow_html=True)
+
+st.divider()
+
+
+# ==========================================
+# STEP 03. PARALLEL COMPUTING
+# ==========================================
+st.markdown("""
+<div class="panel">
+    <div class="step-label">STEP 03 / COMPUTING STAGE</div>
+    <div class="step-title">병렬 행렬 연산</div>
+    <p>Processing Element Array & MAC Operation</p>
+    <div class="small-text">
+    여러 연산 장치가 각각의 행렬 원소를 계산하는 원리를 확인한다.
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown("### 3-1. PE ARRAY ARCHITECTURE")
+
+st.write("""
+PE(Processing Element)는 연산을 담당하는 처리 장치다.
+
+이번 시뮬레이터는 결과 행렬의 각 원소를
+하나의 PE가 담당하는 4×4 교육용 구조를 사용한다.
+""")
+
+C = A @ B
+
+# PE Array
+for i in range(4):
+    pe_cols = st.columns(4)
+
+    for j in range(4):
+        with pe_cols[j]:
+            st.markdown(f"""
+            <div class="pe">
+                <div class="pe-name">PE {i+1}-{j+1}</div>
+                <div class="pe-value">{C[i,j]}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+st.caption(
+    "각 PE에 표시된 숫자는 해당 위치의 최종 연산 결과다. "
+    "이는 병렬 연산 원리를 설명하기 위한 논리적 매핑이다."
+)
+
+st.divider()
+
+# MAC Operation
+st.markdown("### 3-2. MAC COMPUTATION")
+
+st.write("""
+MAC은 Multiply-Accumulate의 약자다.
+곱셈 결과를 누적해서 더하는 연산 구조다.
+""")
+
+row = st.selectbox(
+    "연산 과정을 확인할 PE의 행",
+    range(4),
+    format_func=lambda x: f"ROW {x+1}"
+)
+
+col = st.selectbox(
+    "연산 과정을 확인할 PE의 열",
+    range(4),
+    format_func=lambda x: f"COLUMN {x+1}"
+)
+
+total = 0
+mac_data = []
+
+for k in range(4):
+    product = int(A[row, k] * B[k, col])
+    previous = total
+    total += product
+
+    mac_data.append({
+        "연산 단계": f"MAC {k+1}",
+        "A 데이터": int(A[row, k]),
+        "B 데이터": int(B[k, col]),
+        "곱셈 결과": product,
+        "누적 결과": total
+    })
+
+    st.markdown(f"**MAC UNIT {k+1}**")
+
+    st.code(
+        f"{A[row,k]} × {B[k,col]} = {product}\n"
+        f"{previous} + {product} = {total}"
+    )
 
 st.dataframe(
-    pd.DataFrame(C),
+    pd.DataFrame(mac_data),
+    use_container_width=True,
+    hide_index=True
+)
+
+st.success(
+    f"PE {row+1}-{col+1} 최종 출력값 : {total}"
+)
+
+st.divider()
+
+# Parallel processing explanation
+st.markdown("### 3-3. PARALLEL PROCESSING")
+
+st.markdown("""
+<div class="panel">
+    <b>PARALLEL COMPUTING PRINCIPLE</b>
+    <p>
+    4×4 결과 행렬에는 총 16개의 출력 원소가 존재한다.
+    각 출력 원소의 계산을 서로 다른 PE에 배정하면
+    여러 결과를 병렬로 계산할 수 있다.
+    </p>
+    <p>
+    각 PE는 4개의 곱셈과 누적 과정을 수행한다.
+    </p>
+</div>
+""", unsafe_allow_html=True)
+
+p1, p2, p3 = st.columns(3)
+
+with p1:
+    st.metric("PE UNITS", "16")
+
+with p2:
+    st.metric("MAC PER PE", "4")
+
+with p3:
+    st.metric("TOTAL MAC", "64")
+
+st.caption("""
+※ 이 수치는 16개 PE에 출력 원소를 하나씩 배정한 교육용 가정이다.
+실제 NPU의 PE 개수, 데이터 흐름, 병렬화 방식은 설계에 따라 달라진다.
+""")
+
+st.divider()
+
+
+# ==========================================
+# STEP 04. OUTPUT ANALYSIS
+# ==========================================
+st.markdown("""
+<div class="panel">
+    <div class="step-label">STEP 04 / OUTPUT STAGE</div>
+    <div class="step-title">결과 전달 및 연산 분석</div>
+    <p>Output Matrix & Performance Analysis</p>
+    <div class="small-text">
+    행렬 연산의 최종 결과와 계산 구조를 분석한다.
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown("### 4-1. FINAL OUTPUT MATRIX")
+
+st.dataframe(
+    pd.DataFrame(
+        C,
+        index=["ROW 1", "ROW 2", "ROW 3", "ROW 4"],
+        columns=["COL 1", "COL 2", "COL 3", "COL 4"]
+    ),
     use_container_width=True
 )
 
-col1, col2, col3 = st.columns(3)
+st.markdown("""
+<div class="result-box">
+    <h3 style="color:#72E2C2">PROCESSING COMPLETED</h3>
+    <p>
+    입력 행렬과 가중치 행렬의 곱셈이 완료되었다.
+    생성된 결과는 다음 신경망 연산 단계 등으로 전달될 수 있다.
+    </p>
+</div>
+""", unsafe_allow_html=True)
 
-with col1:
-    st.metric("입력 데이터 수", "4개")
+st.divider()
 
-with col2:
-    st.metric("행렬 크기", "2 × 2")
+# Performance Analysis
+st.markdown("### 4-2. COMPUTATION ANALYSIS")
 
-with col3:
-    st.metric("MAC 연산 횟수", "8회")
+multiplications = 4 * 4 * 4
+accumulations = 4 * 4 * 3
+total_macs = 4 * 4 * 4
+total_arithmetic = multiplications + accumulations
 
-st.success("행렬 연산 및 결과 생성 완료!")
+m1, m2, m3 = st.columns(3)
 
-st.markdown("---")
+with m1:
+    st.metric("MULTIPLICATIONS", f"{multiplications}")
 
-st.subheader("핵심 내용 정리")
+with m2:
+    st.metric("ACCUMULATIONS", f"{accumulations}")
+
+with m3:
+    st.metric("OUTPUT ELEMENTS", "16")
+
+st.markdown("#### 연산량 구성")
+
+analysis = pd.DataFrame({
+    "연산 종류": [
+        "곱셈",
+        "누적 덧셈"
+    ],
+    "연산 횟수": [
+        multiplications,
+        accumulations
+    ]
+})
+
+st.bar_chart(
+    analysis,
+    x="연산 종류",
+    y="연산 횟수"
+)
+
+st.markdown("""
+<div class="panel">
+    <b>RESULT INTERPRETATION</b>
+    <p>
+    4×4 행렬 곱셈은 16개의 결과 원소를 생성한다.
+    각 결과 원소마다 4번의 곱셈이 필요하므로
+    전체 곱셈 횟수는 64회다.
+    </p>
+    <p>
+    각 결과 원소에서 첫 번째 곱셈 결과를 누적값으로 사용하고,
+    나머지 3개의 결과를 더하므로 누적 덧셈은 총 48회다.
+    </p>
+</div>
+""", unsafe_allow_html=True)
+
+st.divider()
+
+# Final Summary
+st.markdown("### SYSTEM SUMMARY")
 
 st.write("""
-① 데이터 입력: 숫자 형태의 데이터 입력
-
-② 행렬 변환: 입력 데이터를 행렬로 구성
-
-③ 행렬 연산: 곱셈과 누적 덧셈 수행
-
-④ 결과 전달: 최종 결과 행렬 생성 및 전달
+| 처리 단계 | 주요 역할 |
+|---|---|
+| DATA INPUT | 입력 데이터와 가중치 설정 |
+| MATRIX MAPPING | 행렬 구성 및 데이터 배치 |
+| PARALLEL COMPUTING | PE Array를 통한 MAC 연산 |
+| OUTPUT ANALYSIS | 결과 행렬 생성 및 연산량 분석 |
 """)
 
 st.caption(
-    "교육용 시뮬레이터 | NPU 행렬 연산의 기본 원리"
+    "NPU MATRIX ENGINE | EDUCATIONAL SIMULATION "
+    "| 실제 NPU 회로를 그대로 재현한 것은 아님"
 )
